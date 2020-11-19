@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="naga-core" />
+        <module name="naga-server" />
+        <module name="naga-repository" />
+        <module name="naga-entity" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="naga-core" target="1.8" />
+      <module name="naga-entity" target="1.8" />
+      <module name="naga-project" target="1.5" />
+      <module name="naga-repository" target="1.8" />
+      <module name="naga-server" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
