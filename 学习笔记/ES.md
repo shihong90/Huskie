@@ -1,5 +1,3 @@
-老虎证券QQ:869893807 
-
 ##### 什么是搜索? 
 
 通过一个关键词或一段描述,得到你想要的结果
@@ -73,8 +71,19 @@ ELK:Elasticsearch(存储),Logstash(日志采集),Kibana(可视化)
 #### ES集群是怎样实现高可用?
 
 - 1.ES在分配单个索引的分片时会将每个分片尽可能分配到更多的节点上.但是,实际情况取决于集群拥有的分片和索引的数量以及它们的大小,不一定总是能均匀的分布
+
 - 2.ES不允许Primary和它的Relica放在同一个节点中,并且同一个节点不接受完全相同的两个Replica
+
 - 3.同一个节点允许多个索引的分片同时存在
+
+- 4.三台节点:3个Primary两个副本共6个Replica,此时,在不考虑master选举的情况下允许宕机两个节点,能承载的最大容量是6T,集群最大支持的QPS:3000
+
+  为了最大程度保证数据的可用性,ES让每个节点尽量分配完整的0/1/2三个不同的分片,保证数据的完整性,这样,任何一台机器都能找到完整的数据,从而实现高可用.
+
+#### 啥叫容错?
+
+- 1.向下兼容
+- 2.在局部出错异常的情况下,保证服务政策允许并且有自行恢复的能力
 
 #### ES的容错是如何实现的?
 
@@ -82,16 +91,36 @@ ELK:Elasticsearch(存储),Logstash(日志采集),Kibana(可视化)
 
 #### ES-node
 
-- 1.Role 
-  - Master:主节点
-  - voting:投票
-  - coordinating:仅协调
-- 2.Node-type
-  - Master-eligible node:候选节点
-  - Data node:数据节点,就是专门存储数据的
-  - Ingest nide:
-  - Machine learning node:机器学习节点
-- Master-eligible
+- Master:主节点,每个集群都有且只有一个
+  - 尽量避免Master节点这样设置node.data=true
+- voting:投票节点
+  - 默认是数据节点就有多少投票节点就有多少
+  - Node.voting_only(仅投票,即使配置了data.master=true,也不会参选,但是任然可以作为数据节点)
+- coordinating:协调节点
+  - 每一个节点都隐式的是一个协调节点,如果同时设置了data.master=false和data.data=false,name此节点将成为仅协调节点
+
+- Master-eligible node:候选节点
+- Data node:数据节点,就是专门存储数据的
+- Ingest node:
+- Machine learning node:机器学习节点
+
+#### node.master和node.data配置
+
+- 1.node.master=true  node.data=true
+
+  这是ES节点默认配置,既作为候选节点又作为数据节点,这样的节点一旦被选举为Master,压力是比较大的,通常来说Master节点应该只承担较为轻量级的任务,比如创建删除索引,分片均衡等
+
+- 2.node.master=true  node.data=false
+
+  只作为候选节点,不作为数据节点,课参选Master节点,当选后成为真正的master节点
+
+- 3.node.master=false  node.data=false
+
+  即不当候选节点,也不作为数据节点,那就是仅协调节点,负责负载均衡
+
+- 4.node.master=flase  node.data=true
+
+  不作为候选节点,但是作为数据节点,这样的节点主要负责数据存储和查询服务
 
 #### 深度剖析Elasticsearch分布式架构的原理
 
@@ -180,10 +209,21 @@ RShard只读的(副本)
   }
   ```
 
-- 4.更新数据
+- 4.更新/修改数据
 
   - 4.1.全量替换
-  - 4.2指定字段更新
+
+```java
+PUT /product/_doc/1
+{
+    "name" : "xiaomi phone",
+    "desc" : "shouji zhang",
+    "price" : 13999
+        
+}
+```
+
+- 4.2指定字段更新
 
 ```java
 POST /index/_doc/id/_update
@@ -196,5 +236,33 @@ POST /index/_doc/id/_update
 
 - 5删除数据
 
+```java
 DELETE/index/_doc/id
+```
 
+- 6.查询数据
+
+```java
+GET /product/_doc/_search
+```
+
+- 查询返回的Json所包含内容
+  - took:这次请求的毫秒数
+  - time_out:是否超时
+  - total:分片数量
+  - sucessful:成功了多少个
+  - skipped:跳过了多少个
+  - failed:失败了多少个
+  - hits:匹配记录
+  - values:结果数量
+  - max_score:最大的相关度分数
+
+
+
+
+
+
+
+
+
+#### 延迟删除特性
