@@ -57,6 +57,10 @@ HadoopRDD:解决的是文件数据的输入
 
 MapPartitionRDD
 
+ShuffleRDD
+
+UnionRDD
+
 #### InputFormat输入格式化类的作用是什么?
 
 - 1.放切片，可以通过getSplits得到数据源有多少个切片基本上也就是有多少个分区
@@ -187,13 +191,69 @@ pipLine数据管道
 
 一个node2节点上的Block01通过多个RDD之间的compute方法迭代调用一条条的数据最终形成File.txt文件,这样一个调用链路叫做pipLine数据管道
 
-
-
-#### 为什么fink火,批量计算的弊端是什么?
+#### 为什么Fink火,批量计算的弊端是什么?
 
 就是spark是批量计算他会有一个限制的PipeLine不跑完,前面的任务不能停,后面会被阻塞住,而fink属于纯流式计算,跟流水线一样,所有人都会动不会停着
 
+#### sparkCore批计算为什么能取代MapReduce?/spark计算速度为什么比MR快?
 
+1.spark申请资源时是粗粒度的资源申请:在任务调度的时候,每一个任务启动速度就变快了,并且task执行完毕之后,并不会把executor给kill掉,而是等所有的task执行完成之后才会释放资源,优势是:task启动速度变快,整体执行时间变短;弊是:浪费集群资源
+
+2.spark基于内存来计算,将RDD的计算结果cache或者persist,包括pipline这种计算模式,每一个算子计算结果会立刻迁移到另一个算子
+
+#### 一句话描述一下Hive
+
+我们可以基于sql语句对海量数据做各种数据分析,也叫非结构化数仓
+
+#### 描述一下Spark架构
+
+在架构层是:
+
+Master:作用是管理集群中所有的Worker,进而管理了集群资源
+
+Worker:就是管理各个节点上的资源(内存,核数)
+
+​	WORKER_MEMEORY 1G
+
+​	WORKER_CORES 2
+
+从task任务的角度来看是由:
+
+Driver:负责任务的调度
+
+Executor:他是真正做任务的执行
+
+#### 在Spark中RDD有哪些依赖关系?
+
+- 顶级父类Dependency
+
+  - 子类实现ShuffleDependency 宽依赖
+
+    一对多
+
+  - 抽象类实现:NarrowDepency 窄依赖 (那若)
+
+    - OneToOneDependency
+
+      RDD的分区是一对一对对应关系
+
+    - RangeDependency
+
+      两个RDD得到一个RDD,多对一
+
+#### 为什么要有一个Hive出现？
+
+易用角度来看：他解决了MapRduece编程负责的缺点，改为SQL简单易于上手
+
+在文件这个维度：他是有三块的:1.data数据文件，他是交给dataNode进行存储
+
+2.元数据他描述的是文件级别的：文件的大小，创建时间，属主
+
+3.数据的元数据类似于数据的二级索引：多少个列，列的类型，描述信息
+
+从表的角度:生成了schema,和row.可以使用sql来便捷解决数据问题
+
+table是虚构的映射是一个模型,表最终操作的还是文件
 
 
 

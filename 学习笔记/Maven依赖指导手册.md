@@ -1,0 +1,204 @@
+---
+typora-root-url: ..\项目细节架构图
+---
+
+## Fink的Maven依赖
+
+```java
+ <properties>
+        <fink-version>1.9.2</fink-version>
+        <scala-version>2.11.8</scala-version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-scala_2.11</artifactId>
+            <version>${fink-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-streaming-scala_2.12</artifactId>
+            <version>1.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-clients_2.11</artifactId>
+            <version>${fink-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala-version}</version>
+        </dependency>
+    </dependencies>
+```
+
+## Fink本地模式运行
+
+WordCount词频统计:
+
+```java
+package text
+
+import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
+import org.apache.flink.streaming.api.scala._
+object WordCount {
+  def main(args: Array[String]): Unit = {
+    //准备环境
+    /**
+      * getExecutionEnvironment:根据执行环境创建上下文(用的最多)
+      * createLocalEnvironment():创建一个本地执行的环境loacl
+      * createLocalEnvironmentWithWebUI()创建本地执行换同时还开启了WebUI
+      */
+    val env = StreamExecutionEnvironment.getExecutionEnvironment
+
+    /**
+      * hostname主机名
+      * port端口
+      * delimiter: 接收的数据要不要分隔符,默认是Char = '\n'
+      * maxRetry: 最大重试次数 默认0
+      * DataStream:一组相同类型的元素,组成的数据流
+      */
+    val initStream: DataStream[String] = env.socketTextStream("192.168.1.102",8000)
+    //分词
+
+    val wordStream: DataStream[String] = initStream.flatMap(_.split( " "))
+    val pairStream: DataStream[(String, Int)] = wordStream.map((_,1))
+    val keyByStream = pairStream.keyBy(0)
+    val restStream = keyByStream.sum(1)
+    restStream.print()
+
+    //启动执行
+    env.execute()
+  }
+
+}
+
+```
+
+在在远程服务器上监听:nc -lk 8000
+
+![1610244583214](/../学习笔记/1610244583214.png)
+
+## Fink的Jar运行模式
+
+```java
+flink run -c 主类路径 -d jar包路径
+```
+
+
+
+## Spark的Manven依赖
+
+```java
+ <!--spark 离线任务核心依赖-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.11</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+
+        <!--spark 实时任务核心依赖-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming_2.11</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+
+        <!--spark streaming 和kafka集成的依赖配置-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming-kafka-0-10_2.11</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+        <!--sparkSQL依赖-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_2.11</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+        <!--spark支持hive-->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-hive_2.11</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-catalyst_2.11</artifactId>
+            <version>2.1.0</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+```
+
+
+
+## HBase的Maven依赖
+
+```java
+
+```
+
+## Kafka的Maven依赖
+
+```java
+
+```
+
+
+
+在maven项目中既有java又有scala代码是配置maven-scla-plugin插件打包时可以将两类代码一起打包
+
+```java
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.scala-tools</groupId>
+                <artifactId>maven-scala-plugin</artifactId>
+                <version>2.15.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+```
+
+Redis的Maven依赖
+
+```java
+
+```
+
+## SparingBoot的Maven依赖
+
+```java
+
+```
+
+## Mybatis的Maven依赖
+
+```java
+
+```
+
+## JPA的Maven依赖
+
+```java
+
+```
+
+## Java工具类的Maven依赖
+
+```java
+
+```
+
