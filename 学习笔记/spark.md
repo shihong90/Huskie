@@ -243,7 +243,7 @@ Executor:他是真正做任务的执行
 
 #### 为什么要有一个Hive出现？
 
-易用角度来看：他解决了MapRduece编程负责的缺点，改为SQL简单易于上手
+易用角度来看：他解决了MapRduece编程复杂 的缺点，改为SQL简单易于上手
 
 在文件这个维度：他是有三块的:1.data数据文件，他是交给dataNode进行存储
 
@@ -255,9 +255,21 @@ Executor:他是真正做任务的执行
 
 table是虚构的映射是一个模型,表最终操作的还是文件
 
+#### catalog是什么?
+
+编目,对元数据有个临时的内存管理,如果你想实现只写sql,需要先在catalog里面准备出那些表的元数据,要么是通过源数据转换成dataFrame在注册成表,要么是开启hive1的metadataStore支持
+
+#### DateSet
+
+是对RDD的一个包装,对其进行了优化,最终还是要成为RDD才能出发DAGScheduler
 
 
 
+
+
+
+
+SparkCore执行调度引擎
 
 
 
